@@ -1,0 +1,52 @@
+<script type="text/discourse-plugin" version="0.8">
+    function togglePollResults () {
+        //
+        // Check to see if we've got a poll button with the class toggle-results that does 
+        // NOT have the disabled attribute and that it does not have the attribute toggled-once.
+        // This means that there have been votes on this poll by other people and that we haven't
+        // toggled it yet using the code below. We have then found some buttons we can press to 
+        // toggle results. 
+        // We then look to see if the poll button text is "Show results". IF this is the case then we
+        // have voted in this poll so we don't want to toggle these results. 
+        // If not then we can send a click event to the button and add an attribute "toggled-once" so
+        // that we don't try to re-toggle it every 'n' seconds.
+        //    
+        const r = $( '.poll button.toggle-results:not([disabled]):not([toggled-once])' );
+        
+        r.each( function( index ) {
+            const e = $( this );
+            // Do we have a button label of Show results? If so we've already voted in the poll 
+            // so we can ignore it.
+            const l = $(e).find("span.d-button-label");
+            // console.log("l",l);
+            // console.log("l.text()", l.text());
+            if (l.text().toLowerCase() === 'show results') {
+                e.trigger('click');
+            }
+            e.attr('toggled-once', 'yes');
+        });
+    }
+    
+    function modifyEmptyDiv() {
+        const e = $('.poll .results div.poll-voters:empty');
+        if (e !== null){
+            e.parent().parent().addClass('remove-empty-vote');
+        }
+        return e;
+    }
+    
+    api.onPageChange((url, title) => {
+        console.log('the page changed to: ' + url + ' and title ' + title);
+        togglePollResults();
+    });
+    
+    $( document ).ready( function() {
+        // Run some code every n seconds
+        window.setInterval( function(){
+            togglePollResults();
+        }, 1000);
+        window.setInterval(function(){
+            modifyEmptyDiv();
+        }, 500);
+    });
+</script>
